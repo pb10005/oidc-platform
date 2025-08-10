@@ -1,0 +1,681 @@
+{
+  "info": {
+    "name": "OIDC Platform API",
+    "description": "Complete API collection for OIDC Authentication Server testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "sample-client",
+      "type": "string"
+    },
+    {
+      "key": "clientSecret",
+      "value": "sample-secret",
+      "type": "string"
+    },
+    {
+      "key": "redirectUri",
+      "value": "http://localhost:3000/callback",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "authCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "state",
+      "value": "random-state-value",
+      "type": "string"
+    },
+    {
+      "key": "codeVerifier",
+      "value": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+      "type": "string"
+    },
+    {
+      "key": "codeChallenge",
+      "value": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System Endpoints",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check server health status"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Client Configuration",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["config"]
+            },
+            "description": "Get configuration for frontend applications"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "OIDC Discovery",
+      "item": [
+        {
+          "name": "OpenID Configuration",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/.well-known/openid-configuration",
+              "host": ["{{baseUrl}}"],
+              "path": [".well-known", "openid-configuration"]
+            },
+            "description": "Get OpenID Connect discovery document"
+          },
+          "response": []
+        },
+        {
+          "name": "JWKS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jwks",
+              "host": ["{{baseUrl}}"],
+              "path": ["jwks"]
+            },
+            "description": "Get JSON Web Key Set for token verification"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "OAuth2/OIDC Flow",
+      "item": [
+        {
+          "name": "1. Authorization Request (Manual)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/authorize?response_type=code&client_id={{clientId}}&redirect_uri={{redirectUri}}&scope=openid profile email&state={{state}}&code_challenge={{codeChallenge}}&code_challenge_method=S256",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "authorize"],
+              "query": [
+                {
+                  "key": "response_type",
+                  "value": "code"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "{{redirectUri}}"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email"
+                },
+                {
+                  "key": "state",
+                  "value": "{{state}}"
+                },
+                {
+                  "key": "code_challenge",
+                  "value": "{{codeChallenge}}"
+                },
+                {
+                  "key": "code_challenge_method",
+                  "value": "S256"
+                }
+              ]
+            },
+            "description": "Start OAuth2 authorization flow. This will redirect to login page if not authenticated, then to consent page."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Token Exchange",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', response.access_token);",
+                  "    console.log('Access token saved:', response.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code",
+                  "type": "text"
+                },
+                {
+                  "key": "code",
+                  "value": "{{authCode}}",
+                  "type": "text",
+                  "description": "Set this value from the authorization callback"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "{{redirectUri}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{clientSecret}}",
+                  "type": "text"
+                },
+                {
+                  "key": "code_verifier",
+                  "value": "{{codeVerifier}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "token"]
+            },
+            "description": "Exchange authorization code for access token. Make sure to set the 'authCode' variable with the code received from the authorization callback."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get UserInfo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/userinfo",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "userinfo"]
+            },
+            "description": "Get user information using the access token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            },
+            "description": "Get current user information (requires session authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "1"]
+            },
+            "description": "Get user information by ID (requires session authentication, self only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication (Form-based)",
+      "item": [
+        {
+          "name": "Login Page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Get login page HTML"
+          },
+          "response": []
+        },
+        {
+          "name": "User Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "email",
+                  "value": "user@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "password123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Authenticate user with email and password"
+          },
+          "response": []
+        },
+        {
+          "name": "Registration Page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["register"]
+            },
+            "description": "Get registration page HTML"
+          },
+          "response": []
+        },
+        {
+          "name": "User Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "email",
+                  "value": "newuser@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "password123",
+                  "type": "text"
+                },
+                {
+                  "key": "confirm_password",
+                  "value": "password123",
+                  "type": "text"
+                },
+                {
+                  "key": "first_name",
+                  "value": "John",
+                  "type": "text"
+                },
+                {
+                  "key": "last_name",
+                  "value": "Doe",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["register"]
+            },
+            "description": "Register a new user"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["logout"]
+            },
+            "description": "Log out the current user"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Testing Scenarios",
+      "item": [
+        {
+          "name": "Complete OAuth2 Flow Test",
+          "item": [
+            {
+              "name": "Step 1: Check Discovery",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Discovery document is valid', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response.issuer).to.eql(pm.collectionVariables.get('baseUrl'));",
+                      "    pm.expect(response.authorization_endpoint).to.include('/oauth2/authorize');",
+                      "    pm.expect(response.token_endpoint).to.include('/oauth2/token');",
+                      "    pm.expect(response.userinfo_endpoint).to.include('/oauth2/userinfo');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/.well-known/openid-configuration",
+                  "host": ["{{baseUrl}}"],
+                  "path": [".well-known", "openid-configuration"]
+                }
+              }
+            },
+            {
+              "name": "Step 2: Check JWKS",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('JWKS is valid', function () {",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response.keys).to.be.an('array');",
+                      "    pm.expect(response.keys.length).to.be.greaterThan(0);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/jwks",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["jwks"]
+                }
+              }
+            },
+            {
+              "name": "Step 3: Test Invalid Token",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Invalid token returns 401', function () {",
+                      "    pm.response.to.have.status(401);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid-token",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/oauth2/userinfo",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["oauth2", "userinfo"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error Scenarios",
+          "item": [
+            {
+              "name": "Invalid Client ID",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Invalid client returns 400', function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/oauth2/authorize?response_type=code&client_id=invalid-client&redirect_uri={{redirectUri}}&scope=openid",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["oauth2", "authorize"],
+                  "query": [
+                    {
+                      "key": "response_type",
+                      "value": "code"
+                    },
+                    {
+                      "key": "client_id",
+                      "value": "invalid-client"
+                    },
+                    {
+                      "key": "redirect_uri",
+                      "value": "{{redirectUri}}"
+                    },
+                    {
+                      "key": "scope",
+                      "value": "openid"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Invalid Redirect URI",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Invalid redirect URI returns 400', function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/oauth2/authorize?response_type=code&client_id={{clientId}}&redirect_uri=http://evil.com/callback&scope=openid",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["oauth2", "authorize"],
+                  "query": [
+                    {
+                      "key": "response_type",
+                      "value": "code"
+                    },
+                    {
+                      "key": "client_id",
+                      "value": "{{clientId}}"
+                    },
+                    {
+                      "key": "redirect_uri",
+                      "value": "http://evil.com/callback"
+                    },
+                    {
+                      "key": "scope",
+                      "value": "openid"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Invalid Grant Type",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Invalid grant type returns 400', function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "grant_type",
+                      "value": "invalid_grant",
+                      "type": "text"
+                    },
+                    {
+                      "key": "client_id",
+                      "value": "{{clientId}}",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/oauth2/token",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["oauth2", "token"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Generate PKCE parameters if not set",
+          "if (!pm.collectionVariables.get('codeVerifier')) {",
+          "    const codeVerifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';",
+          "    const codeChallenge = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';",
+          "    pm.collectionVariables.set('codeVerifier', codeVerifier);",
+          "    pm.collectionVariables.set('codeChallenge', codeChallenge);",
+          "}",
+          "",
+          "// Generate random state if not set",
+          "if (!pm.collectionVariables.get('state')) {",
+          "    const state = Math.random().toString(36).substring(2, 15);",
+          "    pm.collectionVariables.set('state', state);",
+          "}"
+        ]
+      }
+    }
+  ]
+}

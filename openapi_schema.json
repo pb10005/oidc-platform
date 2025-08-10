@@ -1,0 +1,1000 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "OIDC Authentication Server",
+    "description": "OpenID Connect compliant authentication and authorization server",
+    "version": "1.0.0",
+    "contact": {
+      "name": "OIDC Platform Support",
+      "url": "https://github.com/your-org/oidc-platform"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Development server"
+    },
+    {
+      "url": "https://your-domain.com",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Health Check",
+        "description": "Check server health status",
+        "operationId": "health_check",
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Get Client Configuration",
+        "description": "Get configuration for frontend applications",
+        "operationId": "get_client_config",
+        "responses": {
+          "200": {
+            "description": "Client configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/openid-configuration": {
+      "get": {
+        "tags": ["OIDC Discovery"],
+        "summary": "OpenID Connect Discovery Document",
+        "description": "Returns the OpenID Connect discovery document",
+        "operationId": "openid_configuration",
+        "responses": {
+          "200": {
+            "description": "OpenID Connect discovery document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OIDCDiscovery"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jwks": {
+      "get": {
+        "tags": ["OIDC Discovery"],
+        "summary": "JSON Web Key Set",
+        "description": "Returns the JSON Web Key Set for token verification",
+        "operationId": "jwks",
+        "responses": {
+          "200": {
+            "description": "JSON Web Key Set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JWKS"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Login Page",
+        "description": "Display the login page",
+        "operationId": "login_page",
+        "parameters": [
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "description": "URL to redirect after successful login",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login page HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User Login",
+        "description": "Authenticate user credentials",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect on successful login"
+          },
+          "400": {
+            "description": "Invalid credentials",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Registration Page",
+        "description": "Display the user registration page",
+        "operationId": "register_page",
+        "responses": {
+          "200": {
+            "description": "Registration page HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User Registration",
+        "description": "Register a new user",
+        "operationId": "register",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to login on successful registration"
+          },
+          "400": {
+            "description": "Registration failed",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "User Logout",
+        "description": "Log out the current user",
+        "operationId": "logout",
+        "responses": {
+          "302": {
+            "description": "Redirect to login page"
+          }
+        }
+      }
+    },
+    "/oauth2/authorize": {
+      "get": {
+        "tags": ["OAuth2/OIDC"],
+        "summary": "Authorization Endpoint",
+        "description": "OAuth 2.0 authorization endpoint for Authorization Code Flow",
+        "operationId": "authorization_endpoint",
+        "parameters": [
+          {
+            "name": "response_type",
+            "in": "query",
+            "required": true,
+            "description": "OAuth 2.0 response type",
+            "schema": {
+              "type": "string",
+              "enum": ["code"]
+            }
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "description": "OAuth 2.0 client identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "description": "Client redirect URI",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": true,
+            "description": "OAuth 2.0 scope values",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "description": "CSRF protection value",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code_challenge",
+            "in": "query",
+            "required": false,
+            "description": "PKCE code challenge",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code_challenge_method",
+            "in": "query",
+            "required": false,
+            "description": "PKCE code challenge method",
+            "schema": {
+              "type": "string",
+              "enum": ["S256", "plain"]
+            }
+          },
+          {
+            "name": "nonce",
+            "in": "query",
+            "required": false,
+            "description": "OpenID Connect nonce",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consent page HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "302": {
+            "description": "Redirect to login if not authenticated"
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/consent": {
+      "post": {
+        "tags": ["OAuth2/OIDC"],
+        "summary": "User Consent",
+        "description": "Handle user consent for authorization",
+        "operationId": "consent_endpoint",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to client with authorization code or error"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oauth2/token": {
+      "post": {
+        "tags": ["OAuth2/OIDC"],
+        "summary": "Token Endpoint",
+        "description": "Exchange authorization code for tokens",
+        "operationId": "token_endpoint",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuth2Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid client credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuth2Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oauth2/userinfo": {
+      "get": {
+        "tags": ["OAuth2/OIDC"],
+        "summary": "UserInfo Endpoint",
+        "description": "Get user information using access token",
+        "operationId": "userinfo_endpoint",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get Current User",
+        "description": "Get information about the currently authenticated user",
+        "operationId": "get_current_user_info",
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{user_id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get User by ID",
+        "description": "Get user information by user ID (self only)",
+        "operationId": "get_user",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "User ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "healthy"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          }
+        },
+        "required": ["status", "version"]
+      },
+      "ClientConfig": {
+        "type": "object",
+        "properties": {
+          "issuer": {
+            "type": "string",
+            "format": "uri",
+            "example": "http://localhost:8000"
+          },
+          "clientId": {
+            "type": "string",
+            "example": "sample-client"
+          },
+          "clientSecret": {
+            "type": "string",
+            "example": "sample-secret"
+          },
+          "redirectUris": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "example": ["http://localhost:3000/callback"]
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["openid", "profile", "email"]
+          },
+          "alertAutoHideSeconds": {
+            "type": "integer",
+            "example": 5
+          },
+          "formLoadingTimeoutSeconds": {
+            "type": "integer",
+            "example": 10
+          },
+          "clientExamplePort": {
+            "type": "integer",
+            "example": 3000
+          }
+        }
+      },
+      "OIDCDiscovery": {
+        "type": "object",
+        "properties": {
+          "issuer": {
+            "type": "string",
+            "format": "uri"
+          },
+          "authorization_endpoint": {
+            "type": "string",
+            "format": "uri"
+          },
+          "token_endpoint": {
+            "type": "string",
+            "format": "uri"
+          },
+          "userinfo_endpoint": {
+            "type": "string",
+            "format": "uri"
+          },
+          "jwks_uri": {
+            "type": "string",
+            "format": "uri"
+          },
+          "scopes_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "response_types_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "response_modes_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "grant_types_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "subject_types_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "id_token_signing_alg_values_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "token_endpoint_auth_methods_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "code_challenge_methods_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "claims_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "JWKS": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JWK"
+            }
+          }
+        }
+      },
+      "JWK": {
+        "type": "object",
+        "properties": {
+          "kty": {
+            "type": "string",
+            "description": "Key type"
+          },
+          "use": {
+            "type": "string",
+            "description": "Key use"
+          },
+          "kid": {
+            "type": "string",
+            "description": "Key ID"
+          },
+          "alg": {
+            "type": "string",
+            "description": "Algorithm"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          },
+          "confirm_password": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          }
+        },
+        "required": ["email", "password", "confirm_password", "first_name", "last_name"]
+      },
+      "ConsentRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["allow", "deny"]
+          },
+          "response_type": {
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string",
+            "format": "uri"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "code_challenge": {
+            "type": "string"
+          },
+          "code_challenge_method": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          }
+        },
+        "required": ["action", "response_type", "client_id", "redirect_uri", "scope"]
+      },
+      "TokenRequest": {
+        "type": "object",
+        "properties": {
+          "grant_type": {
+            "type": "string",
+            "enum": ["authorization_code"]
+          },
+          "code": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string",
+            "format": "uri"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_secret": {
+            "type": "string"
+          },
+          "code_verifier": {
+            "type": "string"
+          }
+        },
+        "required": ["grant_type", "code", "redirect_uri", "client_id"]
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "OAuth 2.0 access token"
+          },
+          "token_type": {
+            "type": "string",
+            "example": "Bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "description": "Token lifetime in seconds"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "OAuth 2.0 refresh token"
+          },
+          "scope": {
+            "type": "string",
+            "description": "Granted scopes"
+          },
+          "id_token": {
+            "type": "string",
+            "description": "OpenID Connect ID token"
+          }
+        },
+        "required": ["access_token", "token_type"]
+      },
+      "UserInfo": {
+        "type": "object",
+        "properties": {
+          "sub": {
+            "type": "string",
+            "description": "Subject identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name"
+          },
+          "given_name": {
+            "type": "string",
+            "description": "Given name"
+          },
+          "family_name": {
+            "type": "string",
+            "description": "Family name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "description": "Email verification status"
+          }
+        },
+        "required": ["sub"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "email", "first_name", "last_name", "is_active", "created_at"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "Error message"
+          }
+        },
+        "required": ["detail"]
+      },
+      "OAuth2Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "OAuth 2.0 error code"
+          },
+          "error_description": {
+            "type": "string",
+            "description": "Human-readable error description"
+          },
+          "error_uri": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI to error information page"
+          }
+        },
+        "required": ["error"]
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "OAuth 2.0 Bearer token authentication"
+      },
+      "SessionAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "user_id",
+        "description": "Session-based authentication using HTTP-only cookies"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "System",
+      "description": "System information and configuration endpoints"
+    },
+    {
+      "name": "OIDC Discovery",
+      "description": "OpenID Connect discovery and key endpoints"
+    },
+    {
+      "name": "Authentication",
+      "description": "User authentication endpoints"
+    },
+    {
+      "name": "OAuth2/OIDC",
+      "description": "OAuth 2.0 and OpenID Connect protocol endpoints"
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints"
+    }
+  ]
+}

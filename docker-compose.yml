@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: oidc-postgres
+    environment:
+      POSTGRES_DB: oidc_db
+      POSTGRES_USER: oidc_user
+      POSTGRES_PASSWORD: oidc_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5433:5432"
+    networks:
+      - oidc-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oidc_user -d oidc_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # OIDC Authentication Server
+  oidc-server:
+    build: .
+    container_name: oidc-server
+    environment:
+      DATABASE_URL: postgresql://oidc_user:oidc_password@postgres:5432/oidc_db
+      SECRET_KEY: your-super-secret-key-change-this-in-production-12345
+      ISSUER: http://localhost:8000
+      DEBUG: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - oidc-network
+    volumes:
+      - ./app:/app/app:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # pgAdmin (Optional - for database management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: oidc-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - oidc-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  oidc-network:
+    driver: bridge
