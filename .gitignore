@@ -101,14 +101,23 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
+# Environment files - NEVER commit files with secrets
 .env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Exception: Allow .env.example and .env.production.fly (no secrets)
+!.env.example
+!.env.production.fly
 
 # Spyder project settings
 .spyderproject
@@ -169,14 +178,89 @@ node_modules/
 htmlcov/
 .coverage
 
-# Local development
-.env.local
-.env.development
-.env.production
-
 # Backup files
 *.bak
 *.backup
 
+# Fly.io specific
+# Keep fly.toml for deployment configuration
+# .fly/ directory contains local Fly.io state
+.fly/
+
+# Deployment secrets (these should never be committed)
+.env.production.secrets
+.env.secrets
+secrets.env
+
+# CI/CD artifacts
+.github/workflows/*.log
+
+# Docker build context
+.docker/
+docker-build/
+
+# Kubernetes secrets
+k8s-secrets.yaml
+secrets.yaml
+*-secrets.yaml
+
+# Terraform state (if using Infrastructure as Code)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Ansible vault files
+vault.yml
+*.vault
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# Database dumps
+*.sql.gz
+*.dump
+database_backup/
+
+# Production logs
+production.log
+error.log
+access.log
+
+# Monitoring and metrics
+prometheus/
+grafana/
+
 # Migration files (if using Alembic)
+# Uncomment if you want to ignore migration files
 # migrations/versions/*.py
+
+# Local scripts that might contain secrets
+local_deploy.sh
+local_setup.sh
+*_local.*
+
+# IDE specific files
+.vscode/settings.json
+.vscode/launch.json
+.idea/workspace.xml
+.idea/tasks.xml
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux specific
+*~
+.nfs*
