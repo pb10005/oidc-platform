@@ -388,7 +388,43 @@ python -m pytest tests/ -v
 
 ## Deployment
 
-### Production Deployment
+### 🚀 Fly.io Deployment (Recommended)
+
+Deploy to Fly.io with global edge distribution and automatic scaling:
+
+1. **Quick Deploy**:
+   ```bash
+   # Install Fly CLI and login
+   brew install flyctl
+   fly auth login
+   
+   # Deploy with one command
+   ./scripts/deploy-fly.sh
+   ```
+
+2. **Manual Deploy**:
+   ```bash
+   # Create app and database
+   fly apps create oidc-platform
+   fly postgres create --name oidc-platform-db --region nrt
+   fly postgres attach --app oidc-platform oidc-platform-db
+   
+   # Set secrets
+   fly secrets set SECRET_KEY="$(openssl rand -base64 32)" --app oidc-platform
+   fly secrets set ISSUER="https://oidc-platform.fly.dev" --app oidc-platform
+   
+   # Deploy
+   fly deploy --dockerfile Dockerfile.fly
+   ```
+
+3. **Health Check**:
+   ```bash
+   ./scripts/health-check-fly.sh
+   ```
+
+**📖 Complete Fly.io Guide**: See [DEPLOYMENT_FLY.md](./DEPLOYMENT_FLY.md) for detailed instructions.
+
+### 🐳 Docker Deployment
 
 1. **Update environment variables**:
    ```bash
@@ -412,7 +448,7 @@ python -m pytest tests/ -v
    docker-compose -f docker-compose.prod.yml up -d
    ```
 
-### Kubernetes Deployment
+### ☸️ Kubernetes Deployment
 
 ```yaml
 # Example Kubernetes deployment
@@ -442,6 +478,17 @@ spec:
               name: oidc-secrets
               key: database-url
 ```
+
+### 🔄 CI/CD
+
+Automatic deployment with GitHub Actions:
+
+1. **Set up secrets** in GitHub repository:
+   - `FLY_API_TOKEN` for Fly.io deployment
+
+2. **Push to main branch** triggers automatic deployment
+
+3. **Manual deployment** available via GitHub Actions workflow
 
 ## Troubleshooting
 
